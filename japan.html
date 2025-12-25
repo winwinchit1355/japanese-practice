@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      /* layout baseline: prevent horizontal overflow */
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .section {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      /* practise UI styles */
+      .practise {
+        background: #ffffff;
+        padding: 18px;
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+        max-width: 420px;
+        width: 100%;
+        height: 50vh;
+      }
+
+      /* input group (word count) */
+      .input-group{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+
+      .input-group label{ font-size:14px; color:#374151 }
+      .input-group input{
+        width: 80px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        font-size: 16px;
+        background: #fff;
+      }
+
+      /* place input inline with buttons on wide screens */
+      @media (min-width: 520px) {
+        .button-row { display:flex; gap:12px; align-items:center; justify-content:center }
+        .input-group { margin:0; }
+      }
+
+      .romaji, .kana{
+        display: flex;
+        flex-direction: column;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .button-group button {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #e6e9ef;
+        background: #f8fafc;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 24px;
+        margin-bottom: 20px;
+        transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+        box-shadow: 0 1px 0 rgba(2,6,23,0.04);
+      }
+      /* add small hand icon before interactive buttons */
+      .button-group button::before {
+        content: '\1F449'; /* 👉 */
+        display: inline-block;
+        margin-right: 8px;
+        font-size: 18px;
+        line-height: 1;
+        vertical-align: middle;
+      }
+      .button-group button:hover {
+        background: #eef2ff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(14,30,60,0.06);
+      }
+      .button-group button:focus {
+        outline: 3px solid rgba(99,102,241,0.12);
+        outline-offset: 3px;
+      }
+      .button-group button:active {
+        transform: translateY(1px);
+      }
+      /* show-answer button highlight */
+      .show-ans-kana, .show-ans-romaji {
+        transition: background .12s ease, box-shadow .12s ease, transform .08s ease;
+      }
+      .show-ans-kana:hover, .show-ans-romaji:hover {
+        background: #f1f5f9;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(2,6,23,0.04);
+      }
+      .show-ans-kana:focus, .show-ans-romaji:focus {
+        outline: 3px solid rgba(99,102,241,0.12);
+        outline-offset: 2px;
+      }
+      /* disabled visual */
+      button[disabled], .show-ans-kana[disabled], .show-ans-romaji[disabled] {
+        opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none;
+      }
+      /* add hand icon to show-answer buttons too */
+      .show-ans-kana::before, .show-ans-romaji::before {
+        content: '\1F449'; /* 👉 */
+        display: inline-block;
+        margin-right: 8px;
+        font-size: 16px;
+        line-height: 1;
+        vertical-align: middle;
+      }
+      .romaji,
+      .kana {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
+      }
+      .romaji-word,
+      .kana-word {
+        display: inline-block;
+        min-width: 64px;
+        text-align: center;
+        font-size: 30px;
+        font-weight: 700;
+      }
+      .show-ans-kana,
+      .show-ans-romaji {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        background: #fff;
+        cursor: pointer;
+      }
+      .kana-ans,
+      .romaji-ans {
+        margin-left: 8px;
+        font-size: 30px;
+        font-weight: 700;
+      }
+      /* hide answer UI initially */
+      .show-ans-kana,
+      .show-ans-romaji,
+      .kana-ans,
+      .romaji-ans {
+        display: none;
+      }
+      /* small responsiveness */
+      @media (max-width: 480px) {
+        .practise {
+          padding: 12px;
+        }
+        .romaji-word,
+        .kana-word {
+          font-size: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="section">
+      <div class="practise">
+            <div class="input-group">
+                <label for="">Word Count</label>
+                <input type="number" class="word-count" placeholder="Word Count" value="1" />
+            </div>
+        <div class="button-group">
+          <button class="kana-btn">Kana</button>
+          <button class="romaji-btn">Romaji</button>
+        </div>
+        <div class="romaji">
+          <span class="romaji-word"> a </span>
+          <button class="show-ans-kana">Show Answer</button>
+          <span class="kana-ans"> あ </span>
+        </div>
+        <div class="kana">
+          <span class="kana-word"> あ </span>
+          <button class="show-ans-romaji">Show Answer</button>
+          <span class="romaji-ans"> a </span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var hiragana = [
+        { kana: "あ", romaji: "a" },
+        { kana: "い", romaji: "i" },
+        { kana: "う", romaji: "u" },
+        { kana: "え", romaji: "e" },
+        { kana: "お", romaji: "o" },
+        { kana: "か", romaji: "ka" },
+        { kana: "き", romaji: "ki" },
+        { kana: "く", romaji: "ku" },
+        { kana: "け", romaji: "ke" },
+        { kana: "こ", romaji: "ko" },
+        { kana: "さ", romaji: "sa" },
+        { kana: "し", romaji: "shi" },
+        { kana: "す", romaji: "su" },
+        { kana: "せ", romaji: "se" },
+        { kana: "そ", romaji: "so" },
+        { kana: "た", romaji: "ta" },
+        { kana: "ち", romaji: "chi" },
+        { kana: "つ", romaji: "tsu" },
+        { kana: "て", romaji: "te" },
+        { kana: "と", romaji: "to" },
+        { kana: "な", romaji: "na" },
+        { kana: "に", romaji: "ni" },
+        { kana: "ぬ", romaji: "nu" },
+        { kana: "ね", romaji: "ne" },
+        { kana: "の", romaji: "no" },
+        { kana: "は", romaji: "ha" },
+        { kana: "ひ", romaji: "hi" },
+        { kana: "ふ", romaji: "fu" },
+        { kana: "へ", romaji: "he" },
+        { kana: "ほ", romaji: "ho" },
+        { kana: "ま", romaji: "ma" },
+        { kana: "み", romaji: "mi" },
+        { kana: "む", romaji: "mu" },
+        { kana: "め", romaji: "me" },
+        { kana: "も", romaji: "mo" },
+        { kana: "や", romaji: "ya" },
+        { kana: "ゆ", romaji: "yu" },
+        { kana: "よ", romaji: "yo" },
+        { kana: "ら", romaji: "ra" },
+        { kana: "り", romaji: "ri" },
+        { kana: "る", romaji: "ru" },
+        { kana: "れ", romaji: "re" },
+        { kana: "ろ", romaji: "ro" },
+        { kana: "わ", romaji: "wa" },
+        { kana: "を", romaji: "wo" },
+        { kana: "ん", romaji: "n" },
+      ];
+      var dakuten = [
+        { kana: "が", romaji: "ga" },
+        { kana: "ぎ", romaji: "gi" },
+        { kana: "ぐ", romaji: "gu" },
+        { kana: "げ", romaji: "ge" },
+        { kana: "ご", romaji: "go" },
+        { kana: "ざ", romaji: "za" },
+        { kana: "じ", romaji: "ji" },
+        { kana: "ず", romaji: "zu" },
+        { kana: "ぜ", romaji: "ze" },
+        { kana: "ぞ", romaji: "zo" },
+        { kana: "だ", romaji: "da" },
+        { kana: "ぢ", romaji: "ji" },
+        { kana: "づ", romaji: "zu" },
+        { kana: "で", romaji: "de" },
+        { kana: "ど", romaji: "do" },
+        { kana: "ば", romaji: "ba" },
+        { kana: "び", romaji: "bi" },
+        { kana: "ぶ", romaji: "bu" },
+        { kana: "べ", romaji: "be" },
+        { kana: "ぼ", romaji: "bo" },
+      ];
+      var handakuten = [
+        { kana: "ぱ", romaji: "pa" },
+        { kana: "ぴ", romaji: "pi" },
+        { kana: "ぷ", romaji: "pu" },
+        { kana: "ぺ", romaji: "pe" },
+        { kana: "ぽ", romaji: "po" },
+
+        // Combinations (yōon)
+        { kana: "きゃ", romaji: "kya" },
+        { kana: "きゅ", romaji: "kyu" },
+        { kana: "きょ", romaji: "kyo" },
+        { kana: "ぎゃ", romaji: "gya" },
+        { kana: "ぎゅ", romaji: "gyu" },
+        { kana: "ぎょ", romaji: "gyo" },
+        { kana: "しゃ", romaji: "sha" },
+        { kana: "しゅ", romaji: "shu" },
+        { kana: "しょ", romaji: "sho" },
+        { kana: "じゃ", romaji: "ja" },
+        { kana: "じゅ", romaji: "ju" },
+        { kana: "じょ", romaji: "jo" },
+        { kana: "ちゃ", romaji: "cha" },
+        { kana: "ちゅ", romaji: "chu" },
+        { kana: "ちょ", romaji: "cho" },
+        { kana: "にゃ", romaji: "nya" },
+        { kana: "にゅ", romaji: "nyu" },
+        { kana: "にょ", romaji: "nyo" },
+        { kana: "ひゃ", romaji: "hya" },
+        { kana: "ひゅ", romaji: "hyu" },
+        { kana: "ひょ", romaji: "hyo" },
+        { kana: "びゃ", romaji: "bya" },
+        { kana: "びゅ", romaji: "byu" },
+        { kana: "びょ", romaji: "byo" },
+        { kana: "ぴゃ", romaji: "pya" },
+        { kana: "ぴゅ", romaji: "pyu" },
+        { kana: "ぴょ", romaji: "pyo" },
+        { kana: "みゃ", romaji: "mya" },
+        { kana: "みゅ", romaji: "myu" },
+        { kana: "みょ", romaji: "myo" },
+        { kana: "りゃ", romaji: "rya" },
+        { kana: "りゅ", romaji: "ryu" },
+        { kana: "りょ", romaji: "ryo" },
+      ];
+
+      (function () {
+        // var combined = hiragana.concat(dakuten, handakuten);
+        var combined = hiragana;
+
+        var kanaBtn = document.querySelector(".kana-btn");
+        var romajiBtn = document.querySelector(".romaji-btn");
+        var romajiWord = document.querySelector(".romaji-word");
+        var kanaAns = document.querySelector(".kana-ans");
+        var kanaWord = document.querySelector(".kana-word");
+        var romajiAns = document.querySelector(".romaji-ans");
+        var showAnsKanaBtn = document.querySelector(".show-ans-kana");
+        var showAnsRomajiBtn = document.querySelector(".show-ans-romaji");
+        var kanaDiv = document.querySelector(".kana");
+        var romajiDiv = document.querySelector(".romaji");
+
+        var current = null;
+        var currentSet = [];
+
+        function pickRandom() {
+          return combined[Math.floor(Math.random() * combined.length)];
+        }
+
+        function pickRandomSet(n) {
+          var out = [];
+          var pool = combined.slice(0);
+          n = Math.max(1, Math.min(n, pool.length));
+          for (var i = 0; i < n; i++) {
+            var idx = Math.floor(Math.random() * pool.length);
+            out.push(pool.splice(idx, 1)[0]);
+          }
+          return out;
+        }
+
+        kanaBtn.addEventListener("click", function () {
+          var countEl = document.querySelector('.word-count');
+          var count = 1;
+          if (countEl) {
+            count = parseInt(countEl.value, 10) || 1;
+          }
+          currentSet = pickRandomSet(count);
+          romajiWord.textContent = currentSet.map(function(it){ return it.romaji; }).join(' ');
+          kanaAns.textContent = "";
+          // enable & show the kana answer button and hide the romaji answer button
+          if (showAnsKanaBtn) {
+            showAnsKanaBtn.disabled = false;
+            showAnsKanaBtn.style.display = "inline-block";
+          }
+          if (showAnsRomajiBtn) {
+            showAnsRomajiBtn.disabled = true;
+            showAnsRomajiBtn.style.display = "none";
+          }
+          // hide any previous answers
+          if (kanaAns) {
+            kanaAns.textContent = "";
+            kanaAns.style.display = "none";
+          }
+          if (romajiAns) {
+            romajiAns.textContent = "";
+            romajiAns.style.display = "none";
+          }
+          // show romaji prompt area, hide kana prompt area
+          if (kanaDiv) kanaDiv.style.display = "none";
+          if (romajiDiv) romajiDiv.style.display = "";
+        });
+
+        showAnsKanaBtn.addEventListener("click", function () {
+          if (!currentSet || currentSet.length === 0) return;
+          kanaAns.textContent = currentSet.map(function(it){ return it.kana; }).join(' ');
+          kanaAns.style.display = "inline-block";
+        });
+
+        romajiBtn.addEventListener("click", function () {
+          var countEl = document.querySelector('.word-count');
+          var count = 1;
+          if (countEl) {
+            count = parseInt(countEl.value, 10) || 1;
+          }
+          currentSet = pickRandomSet(count);
+          kanaWord.textContent = currentSet.map(function(it){ return it.kana; }).join(' ');
+          // enable & show romaji answer button and hide kana answer button
+          if (showAnsRomajiBtn) {
+            showAnsRomajiBtn.disabled = false;
+            showAnsRomajiBtn.style.display = "inline-block";
+          }
+          if (showAnsKanaBtn) {
+            showAnsKanaBtn.disabled = true;
+            showAnsKanaBtn.style.display = "none";
+          }
+          // hide any previous answers
+          if (romajiAns) {
+            romajiAns.textContent = "";
+            romajiAns.style.display = "none";
+          }
+          if (kanaAns) {
+            kanaAns.textContent = "";
+            kanaAns.style.display = "none";
+          }
+          // show kana prompt area, hide romaji prompt area
+          if (romajiDiv) romajiDiv.style.display = "none";
+          if (kanaDiv) kanaDiv.style.display = "";
+        });
+
+        showAnsRomajiBtn.addEventListener("click", function () {
+          if (!currentSet || currentSet.length === 0) return;
+          romajiAns.textContent = currentSet.map(function(it){ return it.romaji; }).join(' ');
+          romajiAns.style.display = "inline-block";
+        });
+
+        // initialize
+        romajiWord.textContent = "";
+        kanaAns.textContent = "";
+        kanaWord.textContent = "";
+        romajiAns.textContent = "";
+        showAnsKanaBtn.disabled = true;
+        showAnsRomajiBtn.disabled = true;
+        // hide show-answer buttons and answers initially (CSS already hides, ensure inline hiding too)
+        if (showAnsKanaBtn) showAnsKanaBtn.style.display = "none";
+        if (showAnsRomajiBtn) showAnsRomajiBtn.style.display = "none";
+        if (kanaAns) kanaAns.style.display = "none";
+        if (romajiAns) romajiAns.style.display = "none";
+        // ensure both panels visible initially
+        if (kanaDiv) kanaDiv.style.display = "";
+        if (romajiDiv) romajiDiv.style.display = "";
+      })();
+    </script>
+  </body>
+</html>
