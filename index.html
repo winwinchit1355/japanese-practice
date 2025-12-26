@@ -353,6 +353,26 @@
         // var combined = hiragana.concat(dakuten, handakuten);
         var combined = hiragana;
 
+        // track used indices for single-item random picks so we don't repeat
+        var usedKanaIndices = [];
+        var usedRomajiIndices = [];
+
+        function pickRandomUnique(mode) {
+          var used = mode === "kana" ? usedKanaIndices : usedRomajiIndices;
+          var pool = [];
+          for (var i = 0; i < combined.length; i++) {
+            if (used.indexOf(i) === -1) pool.push(i);
+          }
+          // reset when all used
+          if (pool.length === 0) {
+            used.length = 0;
+            for (var i = 0; i < combined.length; i++) pool.push(i);
+          }
+          var idx = pool[Math.floor(Math.random() * pool.length)];
+          used.push(idx);
+          return combined[idx];
+        }
+
         var kanaBtn = document.querySelector(".kana-btn");
         var romajiBtn = document.querySelector(".romaji-btn");
         var romajiWord = document.querySelector(".romaji-word");
@@ -366,10 +386,6 @@
 
         var current = null;
         var currentSet = [];
-
-        function pickRandom() {
-          return combined[Math.floor(Math.random() * combined.length)];
-        }
 
         function pickRandomSet(n) {
           var out = [];
@@ -388,7 +404,11 @@
           if (countEl) {
             count = parseInt(countEl.value, 10) || 1;
           }
-          currentSet = pickRandomSet(count);
+          if (count === 1) {
+            currentSet = [pickRandomUnique("kana")];
+          } else {
+            currentSet = pickRandomSet(count);
+          }
           romajiWord.textContent = currentSet
             .map(function (it) {
               return it.romaji;
@@ -434,7 +454,11 @@
           if (countEl) {
             count = parseInt(countEl.value, 10) || 1;
           }
-          currentSet = pickRandomSet(count);
+          if (count === 1) {
+            currentSet = [pickRandomUnique("romaji")];
+          } else {
+            currentSet = pickRandomSet(count);
+          }
           kanaWord.textContent = currentSet
             .map(function (it) {
               return it.kana;
