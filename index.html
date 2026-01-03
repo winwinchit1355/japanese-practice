@@ -39,6 +39,54 @@
       .text-center{
         text-align: center;
       }
+      /* Tabs */
+      .tabs {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 12px;
+        font-size: 18px; /* increased font size for tabs */
+        position: relative;
+        padding-bottom: 12px; /* space for the HR-style line */
+      }
+      .tab {
+        appearance: none;
+        -webkit-appearance: none;
+        border: 1px solid transparent;
+        background: transparent;
+        padding: 8px 14px;
+        border-radius: 9999px;
+        font-weight: 700;
+        /* no text underline — we use an HR below the tabs instead */
+        cursor: pointer;
+        color: #374151;
+        transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
+      }
+
+      /* HR-style underline under the tab bar */
+      .tabs::after {
+        content: "";
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 0;
+        height: 2px;
+        background: #e5e7eb;
+        border-radius: 2px;
+      }
+      .tab:hover {
+        transform: translateY(-1px);
+      }
+      .tab:focus {
+        outline: 3px solid rgba(99,102,241,0.12);
+        outline-offset: 2px;
+      }
+      .tab.active {
+        background: linear-gradient(180deg,#eef2ff,#e0e7ff);
+        border-color: rgba(99,102,241,0.18);
+        box-shadow: 0 6px 18px rgba(14,30,60,0.06);
+        color: #1f2937;
+      }
 
       /* input group (word count) */
       .input-group {
@@ -208,7 +256,10 @@
   <body>
     <div class="section">
       <div class="practise">
-        <h1 class="text-center">Hiragana</h1>
+        <div class="tabs" role="tablist" aria-label="Script tabs">
+          <button class="tab active" data-script="hiragana" role="tab" aria-selected="true">Hiragana</button>
+          <button class="tab" data-script="katakana" role="tab" aria-selected="false">Katakana</button>
+        </div>
         <div class="input-group">
           <label for="">Word Count</label>
           <input
@@ -284,6 +335,54 @@
         { kana: "を", romaji: "wo" },
         { kana: "ん", romaji: "n" },
       ];
+      var katakana = [
+        { kana: "ア", romaji: "a" },
+        { kana: "イ", romaji: "i" },
+        { kana: "ウ", romaji: "u" },
+        { kana: "エ", romaji: "e" },
+        { kana: "オ", romaji: "o" },
+        { kana: "カ", romaji: "ka" },
+        { kana: "キ", romaji: "ki" },
+        { kana: "ク", romaji: "ku" },
+        { kana: "ケ", romaji: "ke" },
+        { kana: "コ", romaji: "ko" },
+        { kana: "サ", romaji: "sa" },
+        { kana: "シ", romaji: "shi" },
+        { kana: "ス", romaji: "su" },
+        { kana: "セ", romaji: "se" },
+        { kana: "ソ", romaji: "so" },
+        { kana: "タ", romaji: "ta" },
+        { kana: "チ", romaji: "chi" },
+        { kana: "ツ", romaji: "tsu" },
+        { kana: "テ", romaji: "te" },
+        { kana: "ト", romaji: "to" },
+        { kana: "ナ", romaji: "na" },
+        { kana: "ニ", romaji: "ni" },
+        { kana: "ヌ", romaji: "nu" },
+        { kana: "ネ", romaji: "ne" },
+        { kana: "ノ", romaji: "no" },
+        { kana: "ハ", romaji: "ha" },
+        { kana: "ヒ", romaji: "hi" },
+        { kana: "フ", romaji: "fu" },
+        { kana: "ヘ", romaji: "he" },
+        { kana: "ホ", romaji: "ho" },
+        { kana: "マ", romaji: "ma" },
+        { kana: "ミ", romaji: "mi" },
+        { kana: "ム", romaji: "mu" },
+        { kana: "メ", romaji: "me" },
+        { kana: "モ", romaji: "mo" },
+        { kana: "ヤ", romaji: "ya" },
+        { kana: "ユ", romaji: "yu" },
+        { kana: "ヨ", romaji: "yo" },
+        { kana: "ラ", romaji: "ra" },
+        { kana: "リ", romaji: "ri" },
+        { kana: "ル", romaji: "ru" },
+        { kana: "レ", romaji: "re" },
+        { kana: "ロ", romaji: "ro" },
+        { kana: "ワ", romaji: "wa" },
+        { kana: "ヲ", romaji: "wo" },
+        { kana: "ン", romaji: "n" },
+      ];
       var dakuten = [
         { kana: "が", romaji: "ga" },
         { kana: "ぎ", romaji: "gi" },
@@ -350,27 +449,44 @@
       ];
 
       (function () {
-        // var combined = hiragana.concat(dakuten, handakuten);
-        var combined = hiragana;
+        // script datasets
+        var datasets = {
+          hiragana: hiragana,
+          katakana: katakana,
+        };
 
-        // track used indices for single-item random picks so we don't repeat
-        var usedKanaIndices = [];
-        var usedRomajiIndices = [];
+        // start with hiragana
+        var activeScript = "hiragana";
+
+        // track used indices per script/mode
+        var usedIndices = {
+          hiragana: { kana: [], romaji: [] },
+          katakana: { kana: [], romaji: [] },
+        };
+
+        function getCombined() {
+          return datasets[activeScript];
+        }
+
+        // shorthand to access used arrays
+        function usedFor(mode) {
+          return usedIndices[activeScript][mode === "kana" ? "kana" : "romaji"];
+        }
 
         function pickRandomUnique(mode) {
-          var used = mode === "kana" ? usedKanaIndices : usedRomajiIndices;
           var pool = [];
-          for (var i = 0; i < combined.length; i++) {
+          var combinedLocal = getCombined();
+          var used = usedFor(mode);
+          for (var i = 0; i < combinedLocal.length; i++) {
             if (used.indexOf(i) === -1) pool.push(i);
           }
-          // reset when all used
           if (pool.length === 0) {
             used.length = 0;
-            for (var i = 0; i < combined.length; i++) pool.push(i);
+            for (var i = 0; i < combinedLocal.length; i++) pool.push(i);
           }
           var idx = pool[Math.floor(Math.random() * pool.length)];
           used.push(idx);
-          return combined[idx];
+          return combinedLocal[idx];
         }
 
         var kanaBtn = document.querySelector(".kana-btn");
@@ -389,7 +505,7 @@
 
         function pickRandomSet(n) {
           var out = [];
-          var pool = combined.slice(0);
+          var pool = getCombined().slice(0);
           n = Math.max(1, Math.min(n, pool.length));
           for (var i = 0; i < n; i++) {
             var idx = Math.floor(Math.random() * pool.length);
@@ -435,7 +551,7 @@
           }
           // show romaji prompt area, hide kana prompt area
           if (kanaDiv) kanaDiv.style.display = "none";
-          if (romajiDiv) romajiDiv.style.display = "";
+          if (romajiDiv) romajiDiv.style.display = "flex";
         });
 
         showAnsKanaBtn.addEventListener("click", function () {
@@ -484,7 +600,7 @@
           }
           // show kana prompt area, hide romaji prompt area
           if (romajiDiv) romajiDiv.style.display = "none";
-          if (kanaDiv) kanaDiv.style.display = "";
+          if (kanaDiv) kanaDiv.style.display = "flex";
         });
 
         showAnsRomajiBtn.addEventListener("click", function () {
@@ -495,6 +611,31 @@
             })
             .join(" ");
           romajiAns.style.display = "inline-block";
+        });
+
+        // Tab switching logic
+        var tabs = document.querySelectorAll('.tab');
+        tabs.forEach(function(tab){
+          tab.addEventListener('click', function(){
+            var script = tab.getAttribute('data-script');
+            if (!script || script === activeScript) return;
+            // update active state classes/aria
+            tabs.forEach(function(t){
+              t.classList.toggle('active', t === tab);
+              t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+            });
+            activeScript = script;
+            // reset current set and UI
+            currentSet = [];
+            romajiWord.textContent = '';
+            kanaAns.textContent = '';
+            kanaWord.textContent = '';
+            romajiAns.textContent = '';
+            if (showAnsKanaBtn) { showAnsKanaBtn.disabled = true; showAnsKanaBtn.style.display = 'none'; }
+            if (showAnsRomajiBtn) { showAnsRomajiBtn.disabled = true; showAnsRomajiBtn.style.display = 'none'; }
+            if (kanaDiv) kanaDiv.style.display = '';
+            if (romajiDiv) romajiDiv.style.display = '';
+          });
         });
 
         // initialize
